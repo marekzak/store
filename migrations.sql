@@ -126,3 +126,20 @@ CREATE TABLE order_item_attribute (
   PRIMARY KEY (order_item_id, attribute_code),
   CONSTRAINT fk_oia_item FOREIGN KEY (order_item_id) REFERENCES order_item(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+--K tasku:
+-- Napiš MySQL dotaz a odhadni jeho teoretickou optimální časovou složitost, který se bude používat pro zjištění počtu produktů, které uživatel dostane při zaškrtnutí každého jednotlivého checkboxu ve filtraci - viz obrázek výše s počty produktů v závorkách (vyhledávání na Heureka.cz). Můžeš vypočítat teoretické optimum, případné implementační odlišnosti MySQL nás v tuto chvíli nezajímají.
+
+-- Udělal bych denormalizační tabulku pro product_filter_index, abcyh nemusel v reálném čase vyhledávat přes xy tabulek: https://en.wikipedia.org/wiki/Faceted_search
+
+CREATE TABLE product_filter_index (
+  product_id BIGINT UNSIGNED NOT NULL,
+  attribute_id INT UNSIGNED NOT NULL,
+  attribute_value_id BIGINT UNSIGNED NOT NULL,
+  source ENUM('product','variant') NOT NULL,  -- odkud hodnota pochází
+  PRIMARY KEY (product_id, attribute_id, attribute_value_id, source),
+  KEY idx_pfi_attr (attribute_id, attribute_value_id, product_id),
+  CONSTRAINT fk_pfi_product FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE,
+  CONSTRAINT fk_pfi_attribute FOREIGN KEY (attribute_id) REFERENCES attribute(id) ON DELETE CASCADE,
+  CONSTRAINT fk_pfi_attribute_value FOREIGN KEY (attribute_value_id) REFERENCES attribute_value(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
